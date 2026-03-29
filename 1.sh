@@ -259,6 +259,7 @@ server {
     fastcgi_intercept_errors on;
     error_page 403 /403.html;
     location = /403.html {
+        root /var/www/html;
         internal;
         ssi on;
     }
