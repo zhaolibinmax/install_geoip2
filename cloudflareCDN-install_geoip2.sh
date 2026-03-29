@@ -89,8 +89,8 @@ log_info "2. 安装系统依赖..."
 if [ -f /etc/os-release ]; then
     . /etc/os-release
     if [[ $ID == "ubuntu" || $ID == "debian" ]]; then
-        apt update -y
-        apt install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl
+        apt-get update -y
+        apt-get install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl
     elif [[ $ID == "centos" || $ID == "rhel" || $ID == "rocky" ]]; then
         yum install -y gcc make pcre-devel zlib-devel libmaxminddb-devel git curl
     fi
