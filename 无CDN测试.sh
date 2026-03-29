@@ -103,7 +103,15 @@ fi
 log_info "✅ Nginx源码准备完成"
 # ==================== 5. 下载GeoIP2模块 ====================
 log_info "4. 下载GeoIP2模块..."
-[ ! -d "/tmp/$MODULE_NAME" ] && git clone "$MODULE_GIT_URL" /tmp/$MODULE_NAME
+if [ ! -d "/tmp/$MODULE_NAME" ]; then
+    git clone --depth 1 "$MODULE_GIT_URL" /tmp/$MODULE_NAME || {
+        log_warn "Git克隆失败，尝试HTTPS加速下载..."
+        curl -fL --connect-timeout 10 --max-time 30 "https://ghproxy.net/https://github.com/leev/ngx_http_geoip2/archive/refs/heads/master.tar.gz" -o /tmp/geoip2.tar.gz
+        mkdir -p /tmp/$MODULE_NAME
+        tar zxf /tmp/geoip2.tar.gz -C /tmp/$MODULE_NAME --strip-components 1
+        rm -f /tmp/geoip2.tar.gz
+    }
+fi
 log_info "✅ GeoIP2模块下载完成"
 # ==================== 6. 编译动态模块 ====================
 log_info "5. 编译GeoIP2动态模块..."
