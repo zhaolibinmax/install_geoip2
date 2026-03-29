@@ -254,23 +254,20 @@ if [ ! -f "$SITE_CONF" ]; then
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
-    
     server_name _;
-    root /var/www/html;
     
     fastcgi_intercept_errors on;
     error_page 403 /403.html;
-    
-    if ($allowed_country = no) {
-        return 403;
-    }
-    
     location = /403.html {
         internal;
         ssi on;
     }
     
     location / {
+    if ($allowed_country = no) {
+        return 403;
+    }
+        root /var/www/html;
         index index.html index.htm;
     }
 }
