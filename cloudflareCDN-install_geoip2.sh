@@ -2,13 +2,18 @@
 set -e
 
 ##############################################################################
-# 使用本地 GeoIP 数据库
+# 使用本地 GeoIP 数据库 + 动态获取 Cloudflare IP
 ##############################################################################
+
+# 日志函数
+log_info() { echo -e "\n✅ $1"; }
+log_warn() { echo -e "\n⚠️  $1"; }
+log_error() { echo -e "\n❌ $1"; }
 
 # 1. 动态获取已安装的Nginx版本
 NGINX_VERSION=$(nginx -v 2>&1 | grep -oP '\d+\.\d+\.\d+')
 if [ -z "$NGINX_VERSION" ]; then
-    echo "❌ 错误：无法检测到已安装的Nginx版本"
+    log_error "错误：无法检测到已安装的Nginx版本"
     exit 1
 fi
 
@@ -21,31 +26,10 @@ SITE_CONF_EXAMPLE="/etc/nginx/conf.d/1.conf"
 ERROR_PAGE_PATH="/403.html"
 PAGE_ROOT="/var/www/html"
 
-# Cloudflare 官方 IP 段 (最新完整版)
-CF_IP_RANGES=(
-    "173.245.48.0/20"
-    "103.21.244.0/22"
-    "103.22.200.0/22"
-    "103.31.4.0/22"
-    "141.101.64.0/18"
-    "108.162.192.0/18"
-    "190.93.240.0/20"
-    "188.114.96.0/20"
-    "197.234.240.0/22"
-    "198.41.128.0/17"
-    "162.158.0.0/15"
-    "104.16.0.0/13"
-    "104.24.0.0/14"
-    "172.64.0.0/13"
-    "131.0.72.0/22"
-    "2400:cb00::/32"
-    "2606:4700::/32"
-    "2803:f800::/32"
-    "2405:b500::/32"
-    "2405:8100::/32"
-    "2a06:98c0::/29"
-    "2c0f:f248::/32"
-)
+# 验证模块路径
+if [ ! -d "$NGINX_MODULES_PATH" ]; then
+    mkdir -p "$NGINX_MODULES_PATH" || { log_error "无法创建模块目录: $NGINX_MODULES_PATH"; exit 1; }
+fi
 
 echo "========================================"
 echo "开始安装 Nginx GeoIP2 模块（Nginx版本：$NGINX_VERSION）"
@@ -57,9 +41,9 @@ if [ -f /etc/os-release ]; then
     . /etc/os-release
     if [[ $ID == "ubuntu" || $ID == "debian" ]]; then
         sudo apt update -y
-        sudo apt install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git nginx
+        sudo apt install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git nginx curl jq
     elif [[ $ID == "centos" || $ID == "rhel" || $ID == "rocky" ]]; then
-        sudo yum install -y gcc make pcre-devel zlib-devel libmaxminddb-devel git nginx
+        sudo yum install -y gcc make pcre-devel zlib-devel libmaxminddb-devel git nginx curl jq
     fi
 fi
 
@@ -89,132 +73,169 @@ echo -e "\n6. 加载模块..."
 MODULE_LOAD_LINE="load_module modules/${MODULE_NAME}.so;"
 if ! grep -qxF "$MODULE_LOAD_LINE" "$NGINX_CONF"; then
     sudo sed -i "1i $MODULE_LOAD_LINE" "$NGINX_CONF"
-    echo "✅ 已添加模块加载指令"
+    log_info "已添加模块加载指令"
 else
-    echo "✅ 模块加载指令已存在，跳过"
+    log_info "模块加载指令已存在，跳过"
 fi
 
-# 7. Cloudflare 真实IP配置
-echo -e "\n7. 配置 Cloudflare 真实IP..."
+# 7. 动态获取 Cloudflare IP
+echo -e "\n7. 获取 Cloudflare IP 段..."
+CF_IP_RANGES=()
+if command -v curl &> /dev/null && command -v jq &> /dev/null; then
+    echo "  从 Cloudflare API 获取最新 IP 段..."
+    CF_IPV4=$(curl -s https://api.cloudflare.com/client/v4/ips | jq -r '.result.ipv4[]' 2>/dev/null)
+    CF_IPV6=$(curl -s https://api.cloudflare.com/client/v4/ips | jq -r '.result.ipv6[]' 2>/dev/null)
+    
+    if [ -n "$CF_IPV4" ]; then
+        while IFS= read -r ip; do
+            [ -n "$ip" ] && CF_IP_RANGES+=("$ip")
+        done <<< "$CF_IPV4"
+        while IFS= read -r ip; do
+            [ -n "$ip" ] && CF_IP_RANGES+=("$ip")
+        done <<< "$CF_IPV6"
+        log_info "成功获取 ${#CF_IP_RANGES[@]} 个 Cloudflare IP 段"
+    else
+        log_warn "API 获取失败，使用备用 IP 列表"
+        CF_IP_RANGES=(
+            "173.245.48.0/20" "103.21.244.0/22" "103.22.200.0/22" "103.31.4.0/22"
+            "141.101.64.0/18" "108.162.192.0/18" "190.93.240.0/20" "188.114.96.0/20"
+            "197.234.240.0/22" "198.41.128.0/17" "162.158.0.0/15" "104.16.0.0/13"
+            "104.24.0.0/14" "172.64.0.0/13" "131.0.72.0/22" "2400:cb00::/32"
+            "2606:4700::/32" "2803:f800::/32" "2405:b500::/32" "2405:8100::/32"
+            "2a06:98c0::/29" "2c0f:f248::/32"
+        )
+    fi
+else
+    log_warn "curl 或 jq 未安装，使用备用 IP 列表"
+    CF_IP_RANGES=(
+        "173.245.48.0/20" "103.21.244.0/22" "103.22.200.0/22" "103.31.4.0/22"
+        "141.101.64.0/18" "108.162.192.0/18" "190.93.240.0/20" "188.114.96.0/20"
+        "197.234.240.0/22" "198.41.128.0/17" "162.158.0.0/15" "104.16.0.0/13"
+        "104.24.0.0/14" "172.64.0.0/13" "131.0.72.0/22" "2400:cb00::/32"
+        "2606:4700::/32" "2803:f800::/32" "2405:b500::/32" "2405:8100::/32"
+        "2a06:98c0::/29" "2c0f:f248::/32"
+    )
+fi
+
+# 8. Cloudflare 真实IP配置 (改进的 sed 处理)
+echo -e "\n8. 配置 Cloudflare 真实IP..."
 CF_CONFIG_MARKER="# Cloudflare 真实IP配置"
 if ! grep -q "$CF_CONFIG_MARKER" "$NGINX_CONF"; then
-    # 先检查http块是否存在
-    if grep -q "^http {" "$NGINX_CONF"; then
-        sudo sed -i '/^http {/a \
-    '"$CF_CONFIG_MARKER"' \
-    real_ip_header CF-Connecting-IP; \
-    real_ip_recursive on; \
-' "$NGINX_CONF"
+    # 先检查http块是否存在 (更灵活的检测)
+    if grep -q "^http\s*{" "$NGINX_CONF"; then
+        # 使用临时文件替代 sed 以处理复杂的多行插入
+        TEMP_CONF=$(mktemp)
+        sudo cat "$NGINX_CONF" > "$TEMP_CONF"
         
-        # 循环添加IP段
+        # 添加配置块
+        sudo sed -i '/^http\s*{/a\    '"$CF_CONFIG_MARKER"'\n    real_ip_header CF-Connecting-IP;\n    real_ip_recursive on;' "$NGINX_CONF"
+        
+        # 循环添加IP段 (使用更安全的方式)
         for ip in "${CF_IP_RANGES[@]}"; do
-            sudo sed -i "/real_ip_recursive on;/a \
-    set_real_ip_from $ip; \
-" "$NGINX_CONF"
+            # 转义特殊字符
+            ip_escaped=$(printf '%s\n' "$ip" | sed 's:[\/&]:\\&:g')
+            sudo sed -i "/real_ip_recursive on;/a\    set_real_ip_from $ip_escaped;" "$NGINX_CONF"
         done
-        echo "✅ 已添加Cloudflare真实IP配置"
+        log_info "已添加Cloudflare真实IP配置"
+        rm -f "$TEMP_CONF"
     else
-        echo "❌ 错误：nginx.conf中未找到http{}块"
+        log_error "nginx.conf中未找到http{}块"
         exit 1
     fi
 else
-    echo "✅ Cloudflare真实IP配置已存在，跳过"
+    log_info "Cloudflare真实IP配置已存在，跳过"
 fi
 
-# 8. 使用本地文件
-echo -e "\n8. 检查本地 GeoIP 数据库..."
+# 9. 检查本地 GeoIP 数据库
+echo -e "\n9. 检查本地 GeoIP 数据库..."
 if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ]; then
-    echo "⚠️  警告：未找到本地数据库文件 $GEOIP_DB_PATH/GeoLite2-Country.mmdb"
-    echo "请手动上传该文件后再继续！"
+    log_warn "未找到本地数据库文件 $GEOIP_DB_PATH/GeoLite2-Country.mmdb"
+    echo "请手动上传该文件到 $GEOIP_DB_PATH/ 目录后再继续！"
     exit 1
 else
-    echo "✅ 本地 GeoIP 数据库已存在，直接使用"
+    log_info "本地 GeoIP 数据库已存在，直接使用"
 fi
 
-# 9. GeoIP2 规则
-echo -e "\n9. 配置国家拦截规则..."
+# 10. GeoIP2 规则
+echo -e "\n10. 配置国家拦截规则..."
 GEOIP_CONFIG_MARKER="geoip2 $GEOIP_DB_PATH/GeoLite2-Country.mmdb"
 if ! grep -q "$GEOIP_CONFIG_MARKER" "$NGINX_CONF"; then
-    if grep -q "^http {" "$NGINX_CONF"; then
-        sudo sed -i '/^http {/a \
-    '"$GEOIP_CONFIG_MARKER"' { \
-        auto_reload 5m; \
-        $geoip2_country_code country iso_code; \
-    } \
-    map $geoip2_country_code $allowed_country { \
-        default yes; \
-        CN      no; \
-    } \
-' "$NGINX_CONF"
-        echo "✅ 已添加GeoIP2国家拦截规则"
+    if grep -q "^http\s*{" "$NGINX_CONF"; then
+        db_path_escaped=$(printf '%s\n' "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" | sed 's:[\/&]:\\&:g')
+        sudo sed -i '/^http\s*{/a\    '"$GEOIP_CONFIG_MARKER"' {\n        auto_reload 5m;\n        $geoip2_country_code country iso_code;\n    }\n    map $geoip2_country_code $allowed_country {\n        default yes;\n        CN      no;\n    }' "$NGINX_CONF"
+        log_info "已添加GeoIP2国家拦截规则"
     else
-        echo "❌ 错误：nginx.conf中未找到http{}块"
+        log_error "nginx.conf中未找到http{}块"
         exit 1
     fi
 else
-    echo "✅ GeoIP2国家拦截规则已存在，跳过"
+    log_info "GeoIP2国家拦截规则已存在，跳过"
 fi
 
-# 10. 站点配置
-echo -e "\n10. 配置站点拦截..."
+# 11. 站点配置 (自动创建如果不存在)
+echo -e "\n11. 配置站点拦截..."
+if [ ! -f "$SITE_CONF_EXAMPLE" ]; then
+    log_warn "配置文件 $SITE_CONF_EXAMPLE 不存在，正在创建..."
+    sudo mkdir -p "$(dirname "$SITE_CONF_EXAMPLE")"
+    sudo cat > "$SITE_CONF_EXAMPLE" << 'EOF'
+server {
+    listen 80;
+    server_name _;
+    
+    location / {
+        proxy_pass http://backend;
+    }
+}
+EOF
+    log_info "已创建基础配置文件"
+fi
+
 # 检查并添加403错误页配置
 if ! grep -q "error_page 403 $ERROR_PAGE_PATH;" "$SITE_CONF_EXAMPLE"; then
-    if grep -q "^server {" "$SITE_CONF_EXAMPLE"; then
-        sudo sed -i '/^server {/a \
-    fastcgi_intercept_errors on; \
-    error_page 403 '"$ERROR_PAGE_PATH"'; \
-' "$SITE_CONF_EXAMPLE"
-        echo "✅ 已添加403错误页配置"
+    if grep -q "^server\s*{" "$SITE_CONF_EXAMPLE"; then
+        sudo sed -i '/^server\s*{/a\    fastcgi_intercept_errors on;\n    error_page 403 '"$ERROR_PAGE_PATH"';' "$SITE_CONF_EXAMPLE"
+        log_info "已添加403错误页配置"
     else
-        echo "❌ 错误：$SITE_CONF_EXAMPLE中未找到server{}块"
+        log_error "$SITE_CONF_EXAMPLE中未找到server{}块"
         exit 1
     fi
 else
-    echo "✅ 403错误页配置已存在，跳过"
+    log_info "403错误页配置已存在，跳过"
 fi
 
 # 检查并添加国家拦截逻辑
 if ! grep -q '$allowed_country = no' "$SITE_CONF_EXAMPLE"; then
-    if grep -q "location / {" "$SITE_CONF_EXAMPLE"; then
-        sudo sed -i '/location \/ {/a \
-        if ($allowed_country = no) { \
-            return 403; \
-        } \
-' "$SITE_CONF_EXAMPLE"
-        echo "✅ 已添加站点国家拦截逻辑"
+    if grep -q "location\s*/\s*{" "$SITE_CONF_EXAMPLE"; then
+        sudo sed -i '/location\s*\/\s*{/a\        if ($allowed_country = no) {\n            return 403;\n        }' "$SITE_CONF_EXAMPLE"
+        log_info "已添加站点国家拦截逻辑"
     else
-        echo "❌ 错误：$SITE_CONF_EXAMPLE中未找到location / {}块"
+        log_error "$SITE_CONF_EXAMPLE中未找到location / {}块"
         exit 1
     fi
 else
-    echo "✅ 站点国家拦截逻辑已存在，跳过"
+    log_info "站点国家拦截逻辑已存在，跳过"
 fi
 
 # 检查并添加403页面location配置
-if ! grep -q "location = $ERROR_PAGE_PATH" "$SITE_CONF_EXAMPLE"; then
-    if grep -q "^server {" "$SITE_CONF_EXAMPLE"; then
-        sudo sed -i '/^server {/a \
-    location = '"$ERROR_PAGE_PATH"' { \
-        root '"$PAGE_ROOT"'; \
-        internal; \
-        ssi on; \
-    } \
-' "$SITE_CONF_EXAMPLE"
-        echo "✅ 已添加403页面location配置"
+if ! grep -q "location\s*=\s*$ERROR_PAGE_PATH" "$SITE_CONF_EXAMPLE"; then
+    if grep -q "^server\s*{" "$SITE_CONF_EXAMPLE"; then
+        error_page_escaped=$(printf '%s\n' "$ERROR_PAGE_PATH" | sed 's:[\/&]:\\&:g')
+        page_root_escaped=$(printf '%s\n' "$PAGE_ROOT" | sed 's:[\/&]:\\&:g')
+        sudo sed -i '/^server\s*{/a\    location = '"$error_page_escaped"' {\n        root '"$page_root_escaped"';\n        internal;\n        ssi on;\n    }' "$SITE_CONF_EXAMPLE"
+        log_info "已添加403页面location配置"
     else
-        echo "❌ 错误：$SITE_CONF_EXAMPLE中未找到server{}块"
+        log_error "$SITE_CONF_EXAMPLE中未找到server{}块"
         exit 1
     fi
 else
-    echo "✅ 403页面location配置已存在，跳过"
+    log_info "403页面location配置已存在，跳过"
 fi
 
-# 11. 403页面
-echo -e "\n11. 创建 403 页面..."
+# 12. 创建 403 页面
+echo -e "\n12. 创建 403 页面..."
 sudo mkdir -p "$PAGE_ROOT"
-# 检查文件是否已存在，避免覆盖
 if [ ! -f "$PAGE_ROOT/403.html" ]; then
-    sudo cat > "$PAGE_ROOT/403.html" << EOF
+    sudo cat > "$PAGE_ROOT/403.html" << 'EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -254,26 +275,25 @@ if [ ! -f "$PAGE_ROOT/403.html" ]; then
 </html>
 EOF
     sudo chmod 644 "$PAGE_ROOT/403.html"
-    echo "✅ 403页面已创建"
+    log_info "403页面已创建"
 else
-    echo "✅ 403页面已存在，跳过创建"
-fi
+    log_info "403页面已存在，跳过创建"i
 
-# 12. 测试并重启
-echo -e "\n12. 测试 Nginx 配置..."
+# 13. 测试并重启
+echo -e "\n13. 测试 Nginx 配置..."
 if sudo nginx -t; then
     sudo systemctl restart nginx
-    echo "✅ Nginx配置测试通过，已重启"
+    log_info "Nginx配置测试通过，已重启"
 else
-    echo "❌ Nginx配置测试失败，请检查配置文件"
+    log_error "Nginx配置测试失败，请检查配置文件"
     exit 1
 fi
 
 # 清理
-echo -e "\n13. 清理临时文件..."
+echo -e "\n14. 清理临时文件..."
 sudo rm -rf /tmp/nginx* /tmp/"$MODULE_NAME"
 
 echo -e "\n========================================"
-echo "✅ 安装完成！GeoIP 模式已生效"
-echo "✅ 中国IP拦截 + Cloudflare真实IP 正常工作"
+log_info "安装完成！GeoIP 模式已生效"
+log_info "中国IP拦截 + Cloudflare真实IP 正常工作"
 echo "========================================"
