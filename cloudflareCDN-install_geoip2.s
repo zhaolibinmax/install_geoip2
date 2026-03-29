@@ -79,7 +79,7 @@ else
 fi
 
 ##############################################################################
-# 7. 获取 Cloudflare IP 段（已修复：超时+自动降级，绝不卡死退出）
+# 7. 获取 Cloudflare IP 段
 ##############################################################################
 log_info "7. 获取 Cloudflare IP 段..."
 unset CF_IP_RANGES
@@ -167,7 +167,9 @@ fi
 
 if ! grep -q "location = $ERROR_PAGE" "$SITE_CONF"; then
     sed -i '/^server {/a \
-    location = '"$ERROR_PAGE"' { root '"$PAGE_ROOT"'; internal; ssi on; } \
+    location = '"$ERROR_PAGE"' { \
+        root '"$PAGE_ROOT"'; \
+        internal; ssi on; } \
 ' "$SITE_CONF"
 fi
 
