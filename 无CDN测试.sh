@@ -70,17 +70,17 @@ if [ -z "$NGINX_VERSION" ]; then
 fi
 NGINX_MODULES=$(nginx -V 2>&1 | grep -oP '(?<=--modules-path=)[^ ]+' || echo "/usr/lib/nginx/modules")
 log_info "✅ Nginx版本: $NGINX_VERSION, 模块路径: $NGINX_MODULES"
-# ==================== 2. 安装系统依赖（修复：增加失败校验）====================
+# ==================== 2. 安装系统依赖====================
 log_info "2. 安装系统依赖..."
-apt update -y
-if ! apt install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl; then
+apt-get update -y
+if ! apt-get install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl; then
     log_error "❌ 系统依赖安装失败，请检查网络或源"
     exit 1
 fi
 log_info "✅ 依赖安装完成"
 # ==================== 3. 备份nginx.conf ====================
 backup_nginx_config
-# ==================== 4. 下载Nginx源码（修复：增加下载/解压失败校验）====================
+# ==================== 4. 下载Nginx源码====================
 log_info "3. 准备Nginx源码..."
 cd /tmp
 NGINX_TAR="nginx-$NGINX_VERSION.tar.gz"
@@ -143,7 +143,7 @@ if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ]; then
     exit 1
 fi
 log_info "✅ GeoIP数据库检查完成"
-# ==================== 10. 配置国家拦截（修复：匹配带缩进的http{}）====================
+# ==================== 10. 配置国家拦截====================
 log_info "9. 配置国家拦截规则..."
 if ! grep -q "geoip2 $GEOIP_DB_PATH/GeoLite2-Country.mmdb" "$NGINX_CONF"; then
     cp "$NGINX_CONF" "$TEMP_CONF"
