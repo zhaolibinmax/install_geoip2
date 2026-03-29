@@ -285,28 +285,38 @@ mkdir -p "$PAGE_ROOT"
 if [ ! -f "$PAGE_ROOT/403.html" ]; then
     cat > "$PAGE_ROOT/403.html" << 'PAGEEOF'
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Access Denied</title>
+    <title>403 - Access Forbidden</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { display: flex; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .container { text-align: center; background: white; padding: 50px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2); max-width: 500px; }
-        h1 { color: #e53935; font-size: 72px; margin-bottom: 20px; font-weight: bold; }
-        h2 { color: #333; font-size: 24px; margin-bottom: 20px; }
-        p { color: #666; font-size: 16px; line-height: 1.6; margin-bottom: 30px; }
-        .info { background: #f5f5f5; padding: 15px; border-radius: 8px; color: #666; font-size: 14px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, Arial, sans-serif; }
+        body { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #f8f9fa; color: #333; padding: 20px; }
+        .container { max-width: 600px; width: 100%; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 40px; text-align: center; }
+        .error-code { font-size: 80px; font-weight: 700; color: #dc3545; margin-bottom: 20px; }
+        .error-title { font-size: 24px; font-weight: 600; margin-bottom: 15px; color: #212529; }
+        .error-desc { font-size: 16px; color: #6c757d; line-height: 1.6; margin-bottom: 30px; }
+        .info-card { background: #f1f3f5; border-radius: 8px; padding: 20px; text-align: left; margin-top: 20px; font-size: 14px; }
+        .info-card p { margin: 8px 0; color: #495057; }
+        .info-card span { font-weight: 600; color: #212529; }
+        @media (max-width: 480px) {
+            .container { padding: 30px 20px; }
+            .error-code { font-size: 60px; }
+            .error-title { font-size: 20px; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>403</h1>
-        <h2>Access Denied</h2>
-        <p>Sorry, access from your region is not available.</p>
-        <div class="info">
-            <p>If you believe this is an error, please contact the site administrator.</p>
+        <div class="error-code">403</div>
+        <h1 class="error-title">Access Forbidden</h1>
+        <p class="error-desc">Your region or IP address is not authorized to access this resource.</p>
+        <div class="info-card">
+            <p><span>Your IP:</span> <!--# echo var="remote_addr" --></p>
+            <p><span>Real IP (CF):</span> <!--# echo var="http_cf_connecting_ip" --></p>
+            <p><span>Request URL:</span> <!--# echo var="scheme" -->://<!--# echo var="host" --><!--# echo var="request_uri" --></p>
+            <p><span>Access Time:</span> <!--# echo var="time_local" --></p>
         </div>
     </div>
 </body>
