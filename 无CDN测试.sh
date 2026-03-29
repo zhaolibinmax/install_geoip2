@@ -103,6 +103,11 @@ fi
 log_info "✅ Nginx源码准备完成"
 # ==================== 5. 下载GeoIP2模块 ====================
 log_info "4. 下载GeoIP2模块..."
+if [ -f "/tmp/geoip2.tar.gz" ]; then
+    log_info "✅ 检测到离线包 geoip2.tar.gz，跳过下载，直接解压"
+    mkdir -p /tmp/$MODULE_NAME
+    tar zxf /tmp/geoip2.tar.gz -C /tmp/$MODULE_NAME --strip-components 1
+else
 if [ ! -d "/tmp/$MODULE_NAME" ]; then
     git clone --depth 1 "$MODULE_GIT_URL" /tmp/$MODULE_NAME || {
         log_warn "Git克隆失败，尝试HTTPS加速下载..."
