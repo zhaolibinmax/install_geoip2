@@ -8,5 +8,5 @@ curl -sSL https://github.com/zhaolibinmax/install_geoip2/raw/main/install_libres
 
 ## 一键部署cloudflare CDN 版
 ```bash
-curl -sSL https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/cdninstall_geoip2.sh | sudo bash
+curl -sSL https://github.com/zhaolibinmax/install_geoip2/raw/main/cdninstall_geoip2.sh | sudo bash
 ```
