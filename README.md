@@ -8,5 +8,5 @@ curl -sSL https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/hea
 
 ## 一键部署
 ```bash
-https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/cdninstall_geoip2.sh
+curl -sSL https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/cdninstall_geoip2.sh | sudo bash
 ```
