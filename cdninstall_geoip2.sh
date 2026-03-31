@@ -344,11 +344,6 @@ server {
         autoindex on;
         autoindex_exact_size off;
         autoindex_localtime on;
-
-#        allow 127.0.0.1;
-#        allow ::1;
-#        deny all;
-
         location ~* \.(php|jsp|asp|sh|cgi)$ {
         deny all;
         }
