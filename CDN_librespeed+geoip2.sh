@@ -79,7 +79,7 @@ echo -e "${BLUE}=====================================${NC}"
 echo ""
 
 echo -e "${YELLOW}请输入 LibreSpeed 测速服务端口 [默认: $DEFAULT_SPEED_PORT]${NC}"
-read -p "端口号：" CUSTOM_PORT
+read -p "端口号：" CUSTOM_PORT </dev/tty
 
 # 端口验证
 if [ -n "$CUSTOM_PORT" ]; then
