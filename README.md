@@ -3,7 +3,7 @@
 
 ## cloudflare CDN 版
 ```bash
-curl -sSL https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/CDN_librespeed%2Bgeoip2.sh | sudo bash
+sudo bash -c "$(curl -sSL https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/CDN_librespeed%2Bgeoip2.sh)"
 ```
 # 🧑‍💻 作者
 GitHub：zhaolibinmax
