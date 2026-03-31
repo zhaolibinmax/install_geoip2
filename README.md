@@ -10,8 +10,8 @@ curl -sSL https://github.com/zhaolibinmax/install_geoip2/raw/main/install_libres
 ```bash
 curl -sSL https://github.com/zhaolibinmax/install_geoip2/raw/main/cdninstall_geoip2.sh | sudo bash
 ```
-## 🧑‍💻 作者
+# 🧑‍💻 作者
 GitHub：zhaolibinmax
 
-## 📜 许可证
+# 📜 许可证
 本项目无许可证限制，可自由使用、修改、分发，用于个人 / 商业场景均可。
