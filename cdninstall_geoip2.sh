@@ -332,12 +332,10 @@ server {
         proxy_connect_timeout 10s;
         proxy_read_timeout 120s;
         proxy_send_timeout 120s;
-#        root /var/www/html;
-#        index index.html;
 
-#        if ($allowed_country = no) {
-#        return 403;
-#        }
+        if ($allowed_country = no) {
+        return 403;
+        }
     }
 
     location /download/ {
@@ -347,9 +345,9 @@ server {
         autoindex_exact_size off;
         autoindex_localtime on;
 
-        allow 127.0.0.1;
-        allow ::1;
-        deny all;
+#        allow 127.0.0.1;
+#        allow ::1;
+#        deny all;
 
         location ~* \.(php|jsp|asp|sh|cgi)$ {
         deny all;
