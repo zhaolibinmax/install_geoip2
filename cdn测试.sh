@@ -75,7 +75,6 @@ if [ -z "$NGINX_VERSION" ]; then
 fi
 
 NGINX_MODULES=$(nginx -V 2>&1 | grep -oP '(?<=--modules-path=)[^ ]+' || echo "/usr/lib/nginx/modules")
-# 修复：检查模块路径权限
 if [ ! -d "$NGINX_MODULES" ]; then
     mkdir -p "$NGINX_MODULES"
     chmod 755 "$NGINX_MODULES"
@@ -85,7 +84,7 @@ log_info "✅ Nginx版本: $NGINX_VERSION, 模块路径: $NGINX_MODULES"
 # ==================== 2. 安装依赖 ====================
 log_info "2. 安装系统依赖..."
 apt-get update -o Acquire::Timeout=30 -y
-apt-get install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl nginx-module-ssi
+apt-get install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl
 log_info "✅ 依赖安装完成"
 
 # ==================== 3. 备份nginx.conf ====================
