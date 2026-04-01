@@ -1,7 +1,5 @@
 # LibreSpeed + geoip2一键安装脚本
 
-
-## cloudflare CDN
 ```bash
 sudo bash -c "$(curl -sSL https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/librespeed_geoip2.sh)"
 ```
