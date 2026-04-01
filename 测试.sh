@@ -469,7 +469,7 @@ server {
 SITEEOF
     log_info "✅ site配置文件创建完成（已适配自定义端口 $SPEED_PORT）"
 else
-    log_info "✅ site配置文件已存在（请注意检查端口是否为 $SPEED_PORT）"
+    log_info "${YELLOW}✅ site配置文件已存在（请注意检查端口是否为 $SPEED_PORT）${NC}"
 fi
 
 # 3.14 创建403页面
