@@ -360,7 +360,7 @@ if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ]; then
         log_warn "下载失败，尝试官方源（需注册）..."
         curl -s -L --connect-timeout 10 https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=YOUR_LICENSE_KEY&suffix=mmdb \
             -o "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" || {
-            log_error "自动下载失败，请手动下载：https://www.maxmind.com/en/geolite2/geolite2-free-geolocation-data"
+            log_error "自动下载失败，请手动下载：https://www.maxmind.com/en/geolite2/geolite2-free-geolocation-data 至/usr/share/GeoIP"
             restore_nginx_config
             exit 1
         }
