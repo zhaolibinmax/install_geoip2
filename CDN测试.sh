@@ -108,11 +108,17 @@ echo ""
 log_info "===== 开始部署 LibreSpeed 测速服务 ====="
 # 安装 Docker
 echo -e "${YELLOW}[1/3] 正在安装 Docker 环境...${NC}"
-curl -fsSL https://get.docker.com | bash
-if [ $? -ne 0 ]; then
-    log_error "Docker 安装失败，请检查网络！"
-    exit 1
+
+if command -v docker &> /dev/null; then
+    log_info "Docker 已安装，跳过安装步骤"
+else
+    curl -fsSL https://get.docker.com | bash
+    if [ $? -ne 0 ]; then
+        log_error "Docker 安装失败，请检查网络！"
+        exit 1
+    fi
 fi
+
 # 启动 Docker
 echo -e "${YELLOW}[2/3] 启动 Docker 并设置开机自启...${NC}"
 systemctl enable docker
