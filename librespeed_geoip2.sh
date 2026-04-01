@@ -71,8 +71,8 @@ test_nginx_config() {
 # 域名合法性校验函数
 validate_domain() {
     local domain=$1
-    # 简单域名正则校验（支持多级域名、含连字符、数字）
-    if [[ "$domain" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$ ]]; then
+    # 标准通用域名正则
+    if [[ "$domain" =~ ^[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$ ]]; then
         return 0
     else
         return 1
