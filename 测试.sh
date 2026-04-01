@@ -110,7 +110,7 @@ while true; do
         break
     fi
     # 校验端口为纯数字且在合法范围
-    if [[ "$CUSTOM_PORT" =~ ^[0-]+$ ]] && [ "$CUSTOM_PORT" -ge 1 ] && [ "$CUSTOM_PORT" -le 65535 ]; then
+    if [[ "$CUSTOM_PORT" =~ ^[0-9]+$ ]] && [ "$CUSTOM_PORT" -ge 1 ] && [ "$CUSTOM_PORT" -le 65535 ]; then
         SPEED_PORT=$CUSTOM_PORT
         break
     else
