@@ -1,13 +1,15 @@
-# LibreSpeed + geoip2一键安装脚本
+# LibreSpeed + GeoIP2 一键部署脚本
+一键部署 LibreSpeed 测速服务 + Nginx GeoIP2 地域访问限制，支持 Cloudflare 真实 IP 还原。
 
-## 📦 环境要求
-主流 Linux 发行版（Debian 9+/Ubuntu 16.04+）
+## 📝 说明
 
-服务器拥有 root 权限（或 sudo 权限）
+仅支持 Debian / Ubuntu
 
-服务器可访问外网（用于拉取 Docker 脚本和 LibreSpeed 镜像）
+必须以 root 权限运行
 
-开放指定端口的防火墙 / 安全组规则（如需外网访问）
+GeoIP2 数据库自动下载，失败可手动从 MaxMind 获取
+
+使用 Cloudflare 需将域名解析接入 CF
 
 ## ⚡ 快速部署
 一键运行
