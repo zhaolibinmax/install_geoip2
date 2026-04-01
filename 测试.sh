@@ -110,7 +110,7 @@ while true; do
         break
     fi
     # 校验端口为纯数字且在合法范围
-    if [[ "$CUSTOM_PORT" =~ ^[0-9]+$ ]] && [ "$CUSTOM_PORT" -ge 1 ] && [ "$CUSTOM_PORT" -le 65535 ]; then
+    if [[ "$CUSTOM_PORT" =~ ^[0-]+$ ]] && [ "$CUSTOM_PORT" -ge 1 ] && [ "$CUSTOM_PORT" -le 65535 ]; then
         SPEED_PORT=$CUSTOM_PORT
         break
     else
@@ -320,7 +320,7 @@ log_info "10. 检查GeoIP数据库..."
 if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ]; then
     log_info "正在自动下载GeoIP2数据库..."
     mkdir -p "$GEOIP_DB_PATH"
-    curl -s -L --connect-timeout 10 https://github.com/zhaolibinmax/install_geoip2/raw/7956c1688da90cca740a3cf62865613ef8110ffa/GeoLite2-Country.mmdb \
+    curl -s -L --connect-timeout 10 https://github.com/zhaolibinmax/install_geoip2/raw/7956c1688da90cca70a3cf62865613ef8110ffa/GeoLite2-Country.mmdb \
     -o "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" || {
     log_warn "下载失败，尝试GitHub源1..."
     curl -s -L --connect-timeout 10 https://raw.githubusercontent.com/P3TERX/GeoLite2-Database/master/GeoLite2-Country.mmdb \
@@ -337,48 +337,43 @@ if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ]; then
 fi
 log_info "✅ GeoIP数据库检查完成"
 
-# 3.12 动态配置国家拦截（根据用户输入的代码生成规则）
+# 3.12 修复：正确生成GeoIP2拦截规则（无语法错误）
 log_info "11. 配置国家拦截规则..."
-# 拆分国家代码为数组
-IFS=',' read -ra COUNTRY_CODES <<< "$BLOCKED_COUNTRIES"
-# 动态生成geoip2配置段
-GEOIP2_CONF="    geoip2 $GEOIP_DB_PATH\/GeoLite2-Country.mmdb {\\
-        auto_reload 5m;\\
-        \$geoip2_country_code country iso_code;\\
-    }\\
-    map \$geoip2_country_code \$allowed_country {\\
-        default yes;"
-# 遍历代码数组，添加拦截规则
-for code in "${COUNTRY_CODES[@]}"; do
-    GEOIP2_CONF+="\\
-        $code      no;"
-done
-GEOIP2_CONF+="\\
-    }"
 
-# 写入Nginx配置并验证
-if ! grep -q "geoip2 $GEOIP_DB_PATH/GeoLite2-Country.mmdb" "$NGINX_CONF"; then
-    cp "$NGINX_CONF" "$TEMP_CONF"
-    chmod 600 "$TEMP_CONF"
-    sed -i "/^http {/a\\$GEOIP2_CONF" "$TEMP_CONF"
-    if nginx -t -c "$TEMP_CONF" 2>&1 | grep -q "successful"; then
-        mv "$TEMP_CONF" "$NGINX_CONF"
-        log_info "✅ 国家拦截配置完成（拦截：$BLOCKED_COUNTRIES）"
-    else
-        log_error "❌ GeoIP2配置失败"
-        rm -f "$TEMP_CONF"
-        restore_nginx_config
-        exit 1
-    fi
+# 先删除旧配置，避免冲突
+sed -i '/geoip2.*GeoLite2-Country.mmdb/,/}/d' "$NGINX_CONF"
+sed -i '/map.*geoip2_country_code/,/}/d' "$NGINX_CONF"
+
+# 生成干净的配置
+cat > "$TEMP_CONF" << EOL
+geoip2 $GEOIP_DB_PATH/GeoLite2-Country.mmdb {
+    auto_reload 5m;
+    \$geoip2_country_code country iso_code;
+}
+
+map \$geoip2_country_code \$allowed_country {
+    default yes;
+EOL
+
+# 添加拦截国家
+IFS=',' read -ra COUNTRY_ARR <<< "$BLOCKED_COUNTRIES"
+for c in "${COUNTRY_ARR[@]}"; do
+    echo "    $c no;" >> "$TEMP_CONF"
+done
+echo "}" >> "$TEMP_CONF"
+
+# 插入到 http { 下方
+sed -i "/^http {/r $TEMP_CONF" "$NGINX_CONF"
+
+# 测试配置
+if nginx -t; then
+    log_info "✅ GeoIP2国家拦截配置成功"
 else
-    log_info "✅ 国家拦截已配置，将更新为：$BLOCKED_COUNTRIES"
-    # 若已存在配置，先删除原有规则再重新添加
-    sed -i '/geoip2 '${GEOIP_DB_PATH//\//\\/}'\/GeoLite2-Country.mmdb/,/map \$geoip2_country_code \$allowed_country/ {/map \$geoip2_country_code \$allowed_country/!d;}' "$NGINX_CONF"
-    sed -i '/map \$geoip2_country_code \$allowed_country {/,/}/d' "$NGINX_CONF"
-    cp "$NGINX_CONF" "$TEMP_CONF"
-    sed -i "/^http {/a\\$GEOIP2_CONF" "$TEMP_CONF"
-    mv "$TEMP_CONF" "$NGINX_CONF"
+    log_error "❌ GeoIP2配置失败，已自动恢复备份"
+    restore_nginx_config
+    exit 1
 fi
+rm -f "$TEMP_CONF"
 
 # 3.13 创建site配置文件（替换默认测速端口为用户自定义）
 log_info "12. 创建site配置文件..."
@@ -390,7 +385,7 @@ ssl_session_timeout 1d;
 ssl_session_tickets on;
 ssl_buffer_size 4k;
 ssl_protocols TLSv1.3;
-ssl_ciphers TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CHACHA20-POLY1305;
+ssl_ciphers TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CHACHA20_POLY1305;
 ssl_ecdh_curve auto;
 tcp_nopush on;
 tcp_nodelay on;
