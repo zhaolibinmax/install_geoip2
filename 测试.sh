@@ -7,7 +7,7 @@ log_warn() { echo -e "\033[33m[WARN]\033[0m $1"; }
 log_error() { echo -e "\033[31m[ERROR]\033[0m $1"; }
 RED='\033[0;31m'
 GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
+YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 # GeoIP2 核心配置
