@@ -40,12 +40,13 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 # 初始化日志
-trap 'rm -f "$TEMP_CONF" "${DEFAULT_CONF}.new" "/tmp/nginx.conf.tmp.*"; log_info "✅ 脚本中断，已清理临时文件";' EXIT INT TERM
 mkdir -p /var/log
 touch "$LOG_FILE"
 chmod 644 "$LOG_FILE"
 # 日志重定向
 exec &> >(tee -a "$LOG_FILE")
+trap 'rm -f "$TEMP_CONF" "${DEFAULT_CONF}.new" "/tmp/nginx.conf.tmp.*"; log_info "✅ 脚本中断，已清理临时文件";' EXIT INT TERM
+mkdir -p /var/log
 # ==================== 函数定义 (GeoIP2 相关) ====================
 backup_nginx_config() {
     mkdir -p "$(dirname "$NGINX_CONF_BACKUP")"
