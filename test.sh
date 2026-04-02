@@ -216,27 +216,20 @@ else
     # 2. 端口配置
     echo -e "${GREEN}【2/4】基础配置 - 端口${NC}"
     while true; do
-        read -p "$(echo -e "${YELLOW}请输入 LibreSpeed 测速服务端口 ${BLUE}[默认: $DEFAULT_SPEED_PORT]${NC}\n端口号：")" CUSTOM_PORT
+        read -p "$(echo -e "${YELLOW}请输入 LibreSpeed 测速服务端口 [默认: $DEFAULT_SPEED_PORT]${NC}\n端口号：")" CUSTOM_PORT
         if [ -z "$CUSTOM_PORT" ]; then
-            if check_port_in_use "$DEFAULT_SPEED_PORT"; then
-                log_warn "⚠️ 默认端口 $DEFAULT_SPEED_PORT 已被占用，请手动指定端口"
-                continue
-            fi
+            # 先清理旧容器，再用默认端口
+            clean_old_librespeed
             SPEED_PORT=$DEFAULT_SPEED_PORT
             break
         fi
         if [[ "$CUSTOM_PORT" =~ ^[0-9]+$ ]] && [ "$CUSTOM_PORT" -ge 1 ] && [ "$CUSTOM_PORT" -le 65535 ]; then
-            if check_port_in_use "$CUSTOM_PORT"; then
-                log_error "错误：端口 $CUSTOM_PORT 已被占用！"
-                ss -tulpn | grep ":$CUSTOM_PORT " 2>/dev/null | awk '{print "  占用进程:", $NF}' || echo "  请使用 lsof -i :$CUSTOM_PORT 查看详情"
-                echo ""
-                continue
-            fi
+            # 输入端口后，先清理旧容器
+            clean_old_librespeed
             SPEED_PORT=$CUSTOM_PORT
             break
         else
-            log_error "错误：端口必须是1-65535之间的纯数字！"
-            echo ""
+            log_error "错误：端口必须是 1-65535 的数字！"
         fi
     done
     log_info "✅ 确认 LibreSpeed 端口：$SPEED_PORT"
