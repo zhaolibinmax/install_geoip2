@@ -455,12 +455,13 @@ log_info "✅ 模块安装完成"
 # 3.8 加载模块（main块指令，必须在nginx.conf顶部）
 log_info "7. 加载GeoIP2模块..."
 MODULE_LOAD="load_module $NGINX_MODULES/${MODULE_NAME}.so;"
-if ! grep -qE "^[[:space:]]*load_module[[:space:]]+${NGINX_MODULES}/${MODULE_NAME}.so[[:space:]]*;" "$NGINX_CONF"; then
-    sed -i "1i $MODULE_LOAD" "$NGINX_CONF"
-    log_info "✅ 已加载GeoIP2模块"
-else
-    log_info "✅ 模块已存在，跳过"
-fi
+
+# 【关键修改】先删除所有已有的加载该模块的行（兼容任意路径、任意空格）
+sed -i "/^[[:space:]]*load_module[[:space:]]\+.*\/${MODULE_NAME}\.so[[:space:]]*;/d" "$NGINX_CONF"
+
+# 再在文件开头添加新的加载指令
+sed -i "1i $MODULE_LOAD" "$NGINX_CONF"
+log_info "✅ 已加载GeoIP2模块（已自动清理旧配置）"
 # 测试Nginx配置
 log_info "测试Nginx配置（加载模块后）..."
 if ! test_nginx_config; then
