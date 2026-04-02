@@ -557,6 +557,12 @@ if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ]; then
     }
 }
 fi
+# 下载GeoIP数据库后检查
+if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ] || [ $(stat -c%s "$GEOIP_DB_PATH/GeoLite2-Country.mmdb") -lt 102400 ]; then
+    log_error "GeoIP数据库文件损坏/过小，请手动下载"
+    restore_nginx_config
+    exit 1
+fi
 log_info "✅ GeoIP数据库检查完成"
 # 3.13 生成GeoIP2拦截规则 - 写入DEFAULT_CONF
 log_info "12. 配置国家拦截规则..."
