@@ -295,7 +295,6 @@ while true; do
             echo ""
         fi
     done
-done
 
 # ==================== 步骤2: 安装 LibreSpeed (Docker) ====================
 log_info "===== 开始部署 LibreSpeed 测速服务 ====="
