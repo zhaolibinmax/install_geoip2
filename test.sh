@@ -294,6 +294,7 @@ while true; do
             log_error "错误：请输入 y (是) 或 n (否)！请重新输入"
             echo ""
         fi
+    done
 done
 
 # ==================== 步骤2: 安装 LibreSpeed (Docker) ====================
