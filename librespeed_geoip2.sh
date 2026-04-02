@@ -235,7 +235,7 @@ log_info "===== 开始部署 GeoIP2 + Cloudflare 真实IP ====="
 log_info "1. 检测Nginx版本..."
 if ! command -v nginx &> /dev/null; then
     log_warn "未安装Nginx，正在自动安装..."
-    apt-get update -o Acquire::Timeout=30 -y
+    apt-get update -o Acquire::Timeout=300 -y
     apt-get install -y nginx
 fi
 NGINX_VERSION=$(nginx -v 2>&1 | grep -oP '\d+\.\d+\.\d+' | head -1)
@@ -252,7 +252,7 @@ fi
 log_info "✅ Nginx版本: $NGINX_VERSION, 模块路径: $NGINX_MODULES"
 # 3.2 安装系统依赖
 log_info "2. 安装系统依赖..."
-apt-get update -o Acquire::Timeout=30 -y
+apt-get update -o Acquire::Timeout=300 -y
 apt-get install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl libssl-dev
 log_info "✅ 依赖安装完成"
 # 3.3 备份nginx.conf + SITE_CONF
