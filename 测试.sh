@@ -394,7 +394,7 @@ log_info "✅ Nginx版本: $NGINX_VERSION, 模块路径: $NGINX_MODULES"
 
 log_info "2. 安装系统依赖..."
 apt-get update -o Acquire::Timeout=300 -y
-apt-get install -y build-essential libpcre3-dev zlib1-dev libmaxminddb-dev git curl libssl-dev
+apt-get install -y build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl libssl-dev
 log_info "✅ 依赖安装完成"
 
 backup_nginx_config() {
