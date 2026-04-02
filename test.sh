@@ -49,6 +49,16 @@ check_port_in_use() {
     fi
 }
 
+# ==================== 【新增】自动清理旧LibreSpeed容器 ====================
+clean_old_librespeed() {
+    if docker ps -a --filter "name=^librespeed$" | grep -q librespeed; then
+        log_warn "⚠️ 检测到旧容器，自动清理释放端口..."
+        docker stop librespeed >/dev/null 2>&1
+        docker rm librespeed >/dev/null 2>&1
+        sleep 1
+    fi
+}
+
 # 国家代码格式校验 (ISO 3166-1 alpha-2)
 validate_country_code() {
     local code=$1
