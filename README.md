@@ -19,6 +19,13 @@ GeoIP2 数据库自动下载，失败可手动从 MaxMind 获取
 ```bash
 bash -c "$(curl -sSL https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/librespeed_geoip2.sh)"
 ```
+
+测试
+
+```bash
+bash -c "$(curl -sSL https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/test.sh)"
+```
+
 # 🧑‍💻 作者
 GitHub：zhaolibinmax
 
