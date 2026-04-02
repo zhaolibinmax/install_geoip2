@@ -468,8 +468,8 @@ fi
 # 3.9 获取Cloudflare IP (仅当使用CF时执行)
 if [ "$USE_CLOUDFLARE" = true ]; then
     log_info "8. 获取 Cloudflare IP 段..."
-    CF_IPV4=$(curl -s --fail --connect-timeout 10 --max-time 30 https://www.cloudflare.com/ips-v4 2>/dev/null || true)
-    CF_IPV6=$(curl -s --fail --connect-timeout 10 --max-time 30 https://www.cloudflare.com/ips-v6 2>/dev/null || true)
+    CF_IPV4=$(curl -s --fail --connect-timeout 10 --max-time 30 https://www.cloudflare.com/ips-v4 || true)
+    CF_IPV6=$(curl -s --fail --connect-timeout 10 --max-time 30 https://www.cloudflare.com/ips-v6 || true)
     if [[ -n "$CF_IPV4" && -n "$CF_IPV6" ]]; then
         log_info "✅ 成功获取最新Cloudflare IP段"
         CF_IPS="$CF_IPV4"$'\n'"$CF_IPV6"
