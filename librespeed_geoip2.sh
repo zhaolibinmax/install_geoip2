@@ -462,7 +462,7 @@ if ! grep -q "server {" "$SITE_CONF"; then
     add_header Alt-Svc 'h3=\":443\"; ma=86400' always;"
             
             # 自动检测 QUIC/HTTP3 模块
-            if nginx -V 2>&1 | grep -q "quic"; then
+            if nginx -V 2>&1 | grep -q "http_v3_module"; then
                 log_info "✅ 检测到 Nginx QUIC 模块，启用 HTTP3 配置"
                 QUIC_CONFIG="    listen 443 quic reuseport;
     listen [::]:443 quic reuseport;
