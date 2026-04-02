@@ -93,14 +93,6 @@ validate_domain() {
         return 1
     fi
 }
-# 检查SSI模块
-check_ssi_module() {
-    if ! nginx -V 2>&1 | grep -q "http_ssi_module"; then
-        log_warn "⚠️ Nginx未启用SSI模块，403页面的变量将无法渲染，自动启用..."
-        sed -i '/http {/a ssi on;' "$NGINX_CONF"
-        log_info "✅ 已在nginx.conf中启用SSI模块"
-    fi
-}
 # ==================== 步骤1: 交互配置（域名输入 + Cloudflare + 端口 + 拦截国家） ====================
 clear
 echo -e "${BLUE}=====================================${NC}"
@@ -307,8 +299,6 @@ if ! grep -qxF "$MODULE_LOAD" "$NGINX_CONF"; then
 else
     log_info "✅ 模块已存在，跳过"
 fi
-# 检查SSI模块
-check_ssi_module
 # 测试Nginx配置
 log_info "测试Nginx配置（加载模块后）..."
 if ! test_nginx_config; then
