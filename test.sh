@@ -423,7 +423,7 @@ log_info "✅ 模块安装完成"
 # 3.8 加载模块（main块指令，必须在nginx.conf顶部）
 log_info "7. 加载GeoIP2模块..."
 MODULE_LOAD="load_module modules/${MODULE_NAME}.so;"
-if ! grep -qxF "$MODULE_LOAD" "$NGINX_CONF"; then
+if ! grep -qE "^[[:space:]]*load_module[[:space:]]+modules/${MODULE_NAME}.so[[:space:]]*;" "$NGINX_CONF"; then
     sed -i "1i $MODULE_LOAD" "$NGINX_CONF"
     log_info "✅ 已加载GeoIP2模块"
 else
