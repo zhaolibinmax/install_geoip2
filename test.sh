@@ -546,14 +546,14 @@ log_info "11. 检查GeoIP数据库..."
 if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ]; then
     log_info "正在自动下载GeoIP2数据库..."
     mkdir -p "$GEOIP_DB_PATH"
-    curl -s -L --connect-timeout 10 --max-time 30 https://github.com/zhaolibinmax/install_geoip2/raw/refs/heads/main/GeoLite2-Country.mmdb \
+    curl -s -L --connect-timeout 10 --max-time 30 https://raw.githubusercontent.com/P3TERX/GeoLite2-Database/master/GeoLite2-Country.mmdb \
     -o "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" || {
     log_warn "下载失败，尝试GitHub源1..."
-    curl -s -L --connect-timeout 10 --max-time 30 https://raw.githubusercontent.com/P3TERX/GeoLite2-Database/master/GeoLite2-Country.mmdb \
-        -o "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" || {
-            log_error "自动下载失败，请手动下载：https://www.maxmind.com/en/geolite2-free-geolocation-data 至/usr/share/GeoIP"
-            restore_nginx_config
-            exit 1
+    curl -s -L --connect-timeout 10 --max-time 30 https://github.com/zhaolibinmax/install_geoip2/raw/refs/heads/main/GeoLite2-Country.mmdb \
+    -o "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" || {
+    log_error "自动下载失败，请手动下载：https://www.maxmind.com/en/geolite2-free-geolocation-data 至/usr/share/GeoIP"
+        restore_nginx_config
+        exit 1
     }
 }
 fi
