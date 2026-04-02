@@ -45,7 +45,7 @@ mkdir -p /var/log
 touch "$LOG_FILE"
 chmod 644 "$LOG_FILE"
 # 日志重定向
-exec &> >(tee -a "$LOG_FILE")
+exec > >(tee -a "$LOG_FILE") 2>&1
 # ==================== 函数定义 (GeoIP2 相关) ====================
 backup_nginx_config() {
     mkdir -p "$(dirname "$NGINX_CONF_BACKUP")"
