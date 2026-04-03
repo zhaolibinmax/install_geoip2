@@ -105,11 +105,21 @@ detect_package_manager() {
         PM_INSTALL="install -y"
         PM_UPDATE="update -o Acquire::Timeout=300 -y"
     elif [ -f /etc/redhat-release ]; then
-        PM="yum"
-        PM_INSTALL="install -y"
-        PM_UPDATE="makecache"
-        # 优先安装EPEL源（CentOS 8+必需）
-        $PM $PM_INSTALL epel-release -y || log_warn "EPEL源安装失败，可能影响依赖下载"
+        # CentOS 9 / Stream 9 专用适配
+        if grep -q -E "9|Stream 9" /etc/redhat-release; then
+            PM="dnf"
+            PM_INSTALL="install -y"
+            PM_UPDATE="makecache --refresh"
+            # 自动启用 CRB + EPEL 仓库（修复 libmaxminddb-devel 找不到）
+            dnf config-manager --set-enabled crb -y > /dev/null 2>&1
+            dnf install epel-release -y > /dev/null 2>&1
+        else
+            # CentOS 7/8
+            PM="yum"
+            PM_INSTALL="install -y"
+            PM_UPDATE="makecache"
+            yum install epel-release -y > /dev/null 2>&1
+        fi
     else
         log_error "不支持的系统发行版（仅支持Debian/Ubuntu/CentOS/RHEL）"
         exit 1
