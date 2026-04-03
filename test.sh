@@ -459,7 +459,7 @@ if [ ! -f "$NGINX_SRC_TAR" ] || [ ! -d "$NGINX_SRC_DIR" ] || [ ! -f "$NGINX_SRC_
     rm -rf "$NGINX_SRC_TAR" "$NGINX_SRC_DIR"
     log_info "正在下载 Nginx $NGINX_VERSION 源码..."
     # 官方源 + 自动重试3次 + 关闭静默模式
-    if ! curl -L --connect-timeout 20 --max-time 120 --retry 3 "https://nginx.org/download/${NGINX_SRC_TAR%_$$}" -o "$NGINX_SRC_TAR"; then
+    if ! curl -L --connect-timeout 200 --max-time 300 --retry 3 "https://nginx.org/download/${NGINX_SRC_TAR%_$$}" -o "$NGINX_SRC_TAR"; then
         log_error "❌ Nginx源码下载失败！"
         rm -rf "$NGINX_SRC_TAR" "$NGINX_SRC_DIR"
         exit 1
