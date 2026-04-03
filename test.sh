@@ -748,8 +748,8 @@ ssl_buffer_size 4k;
 ssl_protocols TLSv1.3;
 ssl_ciphers TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CHACHA20_POLY1305;
 ssl_ecdh_curve auto;
-tcp_nopush on;
-tcp_nodelay on;
+#tcp_nopush on;
+#tcp_nodelay on;
 resolver 1.1.1.1 8.8.8.8 [2606:4700:4700::1111] valid=300s;
 resolver_timeout 5s;
 fastcgi_intercept_errors on;
@@ -808,8 +808,8 @@ SITEEOF
     else
         # 无证书/localhost：仅生成80端口HTTP配置
         cat >> "$DEFAULT_CONF" << SITEEOF
-tcp_nopush on;
-tcp_nodelay on;
+#tcp_nopush on;
+#tcp_nodelay on;
 resolver 1.1.1.1 8.8.8.8 [2606:4700:4700::1111] valid=300s;
 resolver_timeout 5s;
 fastcgi_intercept_errors on;
