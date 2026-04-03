@@ -497,7 +497,7 @@ fi
 log_info "✅ GeoIP2模块下载完成"
 # 3.6 编译动态模块
 log_info "5. 编译GeoIP2动态模块..."
-cd /tmp/nginx-$NGINX_VERSION
+cd "$NGINX_SRC_DIR"
 ./configure --with-compat --add-dynamic-module=/tmp/$MODULE_NAME || {
     log_error "编译配置失败"
     restore_nginx_config
