@@ -448,18 +448,43 @@ if [ -f "$DEFAULT_CONF" ]; then
     rm -f "$DEFAULT_CONF"
     log_info "🗑️ 已删除旧的 default.conf 配置文件"
 fi
-# 3.4 下载+完整性校验+备用源
+# 3.4 下载Nginx源码
+log_info "3. 准备Nginx源码..."
+cd /tmp || { log_error "无法进入/tmp目录"; exit 1; }
+NGINX_SRC_TAR="nginx-$NGINX_VERSION.tar.gz_$$"
+# 解压后默认目录名（无后缀）
+NGINX_SRC_DIR_ORIG="nginx-$NGINX_VERSION"
+# 目标临时目录名（带$$后缀）
+NGINX_SRC_DIR="nginx-$NGINX_VERSION_$$"
+# 下载+完整性校验
 if [ ! -f "$NGINX_SRC_TAR" ] || [ ! -d "$NGINX_SRC_DIR" ] || [ ! -f "$NGINX_SRC_DIR/auto/options" ]; then
-    # 删除残缺文件
-    rm -rf "$NGINX_SRC_TAR" "$NGINX_SRC_DIR"
-    if ! curl -s -L --connect-timeout 10 --max-time 60 https://nginx.org/download/$NGINX_SRC_TAR -o $NGINX_SRC_TAR; then
-        log_warn "主源下载失败，尝试备用源..."
-        curl -s -L --connect-timeout 10 --max-time 60 https://mirrors.aliyun.com/nginx/$NGINX_SRC_TAR -o $NGINX_SRC_TAR
+    # 删除残缺文件/目录（包括默认目录和目标目录）
+    rm -rf "$NGINX_SRC_TAR" "$NGINX_SRC_DIR" "$NGINX_SRC_DIR_ORIG"
+    log_info "正在下载 Nginx $NGINX_VERSION 源码..."
+    # 官方源 + 自动重试3次 + 关闭静默模式
+    if ! curl -L --connect-timeout 200 --max-time 300 --retry 3 \
+        "https://nginx.org/download/${NGINX_SRC_TAR%_$$}" -o "$NGINX_SRC_TAR"; then
+        log_error "❌ Nginx源码下载失败！"
+        rm -rf "$NGINX_SRC_TAR"
+        exit 1
     fi
-    # 解压并校验核心文件
-    tar zxf $NGINX_SRC_TAR
+    # 解压并校验核心文件（检查tar退出码）
+    log_info "正在解压 Nginx 源码..."
+    if ! tar zxf "$NGINX_SRC_TAR"; then
+        log_error "❌ Nginx源码解压失败（压缩包损坏/权限不足）！"
+        rm -rf "$NGINX_SRC_TAR" "$NGINX_SRC_DIR_ORIG"
+        exit 1
+    fi
+    # 将默认解压目录重命名为带$$后缀的目标目录
+    if ! mv "$NGINX_SRC_DIR_ORIG" "$NGINX_SRC_DIR"; then
+        log_error "❌ 无法重命名Nginx源码目录！"
+        rm -rf "$NGINX_SRC_TAR" "$NGINX_SRC_DIR_ORIG"
+        exit 1
+    fi
+    # 校验核心文件是否存在
     if [ ! -f "$NGINX_SRC_DIR/auto/options" ]; then
         log_error "❌ Nginx源码解压后缺失核心文件auto/options，下载的包损坏！"
+        rm -rf "$NGINX_SRC_TAR" "$NGINX_SRC_DIR"
         exit 1
     fi
 fi
