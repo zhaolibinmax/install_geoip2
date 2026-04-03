@@ -356,7 +356,7 @@ echo -e "${YELLOW}[1/3] 正在安装 Docker 环境...${NC}"
 if command -v docker &> /dev/null; then
     log_info "Docker 已安装，跳过安装步骤"
 else
-    curl -fsSL --connect-timeout 10 --max-time 30 https://get.docker.com | bash
+    curl -fL --connect-timeout 10 --max-time 30 https://get.docker.com | bash
     if [ $? -ne 0 ]; then
         log_error "Docker 安装失败，请检查网络！"
         exit 1
