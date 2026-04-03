@@ -617,7 +617,7 @@ if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ]; then
     # 定义多个下载源，循环尝试
     GEOIP_DB_URLS=(
         "https://github.com/zhaolibinmax/install_geoip2/raw/refs/heads/main/GeoLite2-Country.mmdb"
-        "https://cdn.jsdelivr.net/gh/P3TERX/GeoLite2-CN@release/GeoLite2-Country.mmdb"
+        "https://jp.zhaolibin.sbs/download/GeoLite2-Country.mmdb"
         "https://raw.githubusercontent.com/P3TERX/GeoLite2-CN/release/GeoLite2-Country.mmdb"
     )
     download_success=0
