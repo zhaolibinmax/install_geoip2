@@ -3,7 +3,7 @@
 
 ## 📝 说明
 
-仅支持 Debian / Ubuntu
+支持 Debian / Ubuntu / CentOS
 
 必须以 root 权限运行
 
