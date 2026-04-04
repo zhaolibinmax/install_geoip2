@@ -614,38 +614,44 @@ log_info "11. 检查GeoIP数据库..."
 if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ]; then
     log_info "正在自动下载GeoIP2数据库..."
     mkdir -p "$GEOIP_DB_PATH"
-    # 定义多个下载源，循环尝试
+    
+    # 定义3个下载源（按顺序尝试）
     GEOIP_DB_URLS=(
         "https://github.com/zhaolibinmax/install_geoip2/raw/refs/heads/main/GeoLite2-Country.mmdb"
         "https://cdn.jsdelivr.net/gh/P3TERX/GeoLite2-CN@release/GeoLite2-Country.mmdb"
         "https://raw.githubusercontent.com/P3TERX/GeoLite2-CN/release/GeoLite2-Country.mmdb"
     )
     download_success=0
-    # 遍历下载源，逐个尝试
+
+    # 核心逻辑：逐个下载 → 校验 → 失败删除 → 换下一个
     for url in "${GEOIP_DB_URLS[@]}"; do
-        log_info "尝试从 $url 下载..."
-        # 关闭静默模式，保留超时配置，输出下载过程
-        if curl -L --connect-timeout 100 --max-time 300 "$url" -o "$GEOIP_DB_PATH/GeoLite2-Country.mmdb"; then
-            # 直接标记下载成功，跳过MMDB格式校验
+        log_info "尝试从源 $url 下载..."
+        # 下载文件
+        curl -L --connect-timeout 100 --max-time 300 "$url" -o "$GEOIP_DB_PATH/GeoLite2-Country.mmdb"
+        
+        # 下载后立即校验：文件存在 + 大小≥500KB
+        if [ -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ] && [ $(stat -c%s "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" 2>/dev/null || echo 0) -ge 512000 ]; then
             download_success=1
-            log_info "✅ 数据库下载成功"
-            break
+            log_info "✅ 数据库下载并校验成功"
+            break  # 校验成功，跳出循环，不尝试后续源
         else
-            log_warn "下载失败，尝试下一个源..."
-            rm -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" 2>/dev/null
+            log_warn "⚠️  当前源下载/校验失败，删除损坏文件，尝试下一个源..."
+            rm -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb"  # 校验失败，删除损坏文件
         fi
     done
-    # 所有源下载失败，退出脚本
+
+    # 所有3个源都失败，退出脚本
     if [ $download_success -ne 1 ]; then
-        log_error "自动下载失败，请手动下载至 $GEOIP_DB_PATH"
+        log_error "❌ 所有下载源均失败，请手动下载至 $GEOIP_DB_PATH"
         restore_nginx_config
         exit 1
     fi
 fi
 log_info "✅ GeoIP数据库检查完成"
-# 最终校验：文件存在 + 文件大小不小于500KB
+
+# 最终兜底校验
 if [ ! -f "$GEOIP_DB_PATH/GeoLite2-Country.mmdb" ] || [ $(stat -c%s "$GEOIP_DB_PATH/GeoLite2-Country.mmdb") -lt 512000 ]; then
-    log_error "GeoIP数据库文件损坏/过小，请手动下载"
+    log_error "❌ GeoIP数据库文件异常，请手动下载"
     restore_nginx_config
     exit 1
 fi
