@@ -418,8 +418,8 @@ log_info "===== 开始部署 GeoIP2 + Cloudflare 真实IP ====="
 log_info "1. 检测Nginx版本..."
 if ! command -v nginx &> /dev/null; then
     log_warn "未安装Nginx，正在自动安装..."
-    $PM "$PM_UPDATE"
-    $PM "$PM_INSTALL" nginx
+    "$PM $PM_UPDATE"
+    "$PM $PM_INSTALL" nginx
 fi
 # 禁用Ubuntu默认Nginx站点（避免80/443端口冲突）
 if [ -f /etc/nginx/sites-enabled/default ]; then
@@ -445,15 +445,15 @@ fi
 log_info "✅ Nginx版本: $NGINX_VERSION, 模块路径: $NGINX_MODULES"
 # 3.2 安装系统依赖
 log_info "2. 安装系统依赖..."
-$PM "$PM_UPDATE"
+"$PM $PM_UPDATE"
 if [ "$PM" = "apt-get" ]; then
-    $PM "$PM_INSTALL" build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl libssl-dev
+    "$PM $PM_INSTALL" build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl libssl-dev
 else
     # CentOS/RHEL 适配
-    $PM "$PM_INSTALL" gcc gcc-c++ make pcre-devel zlib-devel libmaxminddb-devel git curl openssl-devel
+    "$PM $PM_INSTALL" gcc gcc-c++ make pcre-devel zlib-devel libmaxminddb-devel git curl openssl-devel
     # CentOS 8+ 需先安装EPEL源（libmaxminddb-devel依赖）
     if [ "$PM" = "yum" ]; then
-        $PM "$PM_INSTALL" epel-release -y
+        "$PM $PM_INSTALL" epel-release -y
     fi
 fi
 log_info "✅ 依赖安装完成"
