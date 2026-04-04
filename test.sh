@@ -394,7 +394,7 @@ if [ $CONTAINER_EXISTS -eq 0 ] || [ "$CURRENT_PORT" != "$SPEED_PORT" ]; then
         log_info "🗑️ 已删除旧容器（端口不匹配：旧端口 $CURRENT_PORT → 新端口 $SPEED_PORT）"
     fi
     # 新建容器
-    docker run -d \
+    docker run \
       --restart always \
       --name librespeed \
       -p 0.0.0.0:$SPEED_PORT:80 \
