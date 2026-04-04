@@ -261,7 +261,7 @@ interactive_config() {
         if [ "$SKIP_CF_CERT" = true ]; then
             break
         fi
-        read -p "$(echo -e "${YELLOW}是否使用默认Let's Encrypt证书路径"/etc/letsencrypt/live/$CUSTOM_DOMAIN/privkey.pem"？(y/n) [默认: y]${NC}\n选择：")" USE_DEFAULT_CERT
+        read -p "$(echo -e "${YELLOW}是否使用默认Let's Encrypt证书路径 "/etc/letsencrypt/live/$CUSTOM_DOMAIN/fullchain.pem" ？(y/n) [默认: y]${NC}\n选择：")" USE_DEFAULT_CERT
         # 未输入则使用默认y
         if [ -z "$USE_DEFAULT_CERT" ]; then
             USE_DEFAULT_CERT=true
