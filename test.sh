@@ -386,9 +386,9 @@ if [ "$CONTAINER_EXISTS" -eq 1 ]; then
     CURRENT_PORT=$(docker inspect librespeed --format '{{range $p, $conf := .NetworkSettings.Ports}}{{range $conf}}{{.HostPort}}{{end}}{{end}}')
 fi
 # 容器不存在 或 端口不匹配 → 重建容器
-if [ $CONTAINER_EXISTS -eq 0 ] || [ "$CURRENT_PORT" != "$SPEED_PORT" ]; then
+if [ "$CONTAINER_EXISTS" -eq 0 ] || [ "$CURRENT_PORT" != "$SPEED_PORT" ]; then
     # 容器存在则先删除
-    if [ $CONTAINER_EXISTS -eq 1 ]; then
+    if [ "$CONTAINER_EXISTS" -eq 1 ]; then
         docker stop librespeed > /dev/null 2>&1
         docker rm librespeed > /dev/null 2>&1
         log_info "🗑️ 已删除旧容器（端口不匹配：旧端口 $CURRENT_PORT → 新端口 $SPEED_PORT）"
@@ -397,7 +397,7 @@ if [ $CONTAINER_EXISTS -eq 0 ] || [ "$CURRENT_PORT" != "$SPEED_PORT" ]; then
     docker run -d \
       --restart always \
       --name librespeed \
-      -p 0.0.0.0:$SPEED_PORT:80 \
+      -p 0.0.0.0:"$SPEED_PORT":80 \
       adolfintel/speedtest
     if [ $? -ne 0 ]; then
         log_error "LibreSpeed 容器启动失败！"
@@ -418,8 +418,8 @@ log_info "===== 开始部署 GeoIP2 + Cloudflare 真实IP ====="
 log_info "1. 检测Nginx版本..."
 if ! command -v nginx &> /dev/null; then
     log_warn "未安装Nginx，正在自动安装..."
-    $PM $PM_UPDATE
-    $PM $PM_INSTALL nginx
+    "$PM $PM_UPDATE"
+    "$PM $PM_INSTALL" nginx
 fi
 NGINX_VERSION=$(nginx -v 2>&1 | grep -oP '\d+\.\d+\.\d+' | head -1)
 if [ -z "$NGINX_VERSION" ]; then
@@ -440,15 +440,15 @@ fi
 log_info "✅ Nginx版本: $NGINX_VERSION, 模块路径: $NGINX_MODULES"
 # 3.2 安装系统依赖
 log_info "2. 安装系统依赖..."
-$PM $PM_UPDATE
+"$PM" "$PM_UPDATE"
 if [ "$PM" = "apt-get" ]; then
-    $PM $PM_INSTALL build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl libssl-dev
+    "$PM" "$PM_INSTALL" build-essential libpcre3-dev zlib1g-dev libmaxminddb-dev git curl libssl-dev
 else
     # CentOS/RHEL 适配
-    $PM $PM_INSTALL gcc gcc-c++ make pcre-devel zlib-devel libmaxminddb-devel git curl openssl-devel
+    "$PM" "$PM_INSTALL" gcc gcc-c++ make pcre-devel zlib-devel libmaxminddb-devel git curl openssl-devel
     # CentOS 8+ 需先安装EPEL源（libmaxminddb-devel依赖）
     if [ "$PM" = "yum" ]; then
-        $PM $PM_INSTALL epel-release -y
+        "$PM" "$PM_INSTALL" epel-release -y
     fi
 fi
 log_info "✅ 依赖安装完成"
