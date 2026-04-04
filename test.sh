@@ -381,7 +381,7 @@ echo -e "${YELLOW}[3/3] 部署 LibreSpeed 容器...${NC}"
 # 检查容器是否存在 + 现有端口是否匹配
 CONTAINER_EXISTS=$(docker ps -a --format "{{.Names}}" | grep -q "^librespeed$" && echo 1 || echo 0)
 CURRENT_PORT=""
-if [ $CONTAINER_EXISTS -eq 1 ]; then
+if [ "$CONTAINER_EXISTS" -eq 1 ]; then
     # 获取容器当前绑定的主机端口
     CURRENT_PORT=$(docker inspect librespeed --format '{{range $p, $conf := .NetworkSettings.Ports}}{{range $conf}}{{.HostPort}}{{end}}{{end}}')
 fi
