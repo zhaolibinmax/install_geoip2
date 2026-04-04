@@ -430,8 +430,8 @@ log_info "===== 开始部署 GeoIP2 + Cloudflare 真实IP ====="
 log_info "1. 检测Nginx版本..."
 if ! command -v nginx &> /dev/null; then
     log_warn "未安装Nginx，正在自动安装..."
-    "$PM $PM_UPDATE"
-    "$PM $PM_INSTALL" nginx
+    $PM $PM_UPDATE
+    $PM $PM_INSTALL nginx
 fi
 # 禁用Ubuntu默认Nginx站点（避免80/443端口冲突）
 if [ -f /etc/nginx/sites-enabled/default ]; then
