@@ -800,10 +800,8 @@ map \$geoip2_country_code \$allowed_country {
     default yes;
 EOL
 # 添加拦截国家
-local OLD_IFS=$IFS
-local IFS=','
-read -ra COUNTRY_ARR <<< "$BLOCKED_COUNTRIES"
-IFS=$OLD_IFS
+OLD_IFS=$IFS
+IFS=',' read -ra COUNTRY_ARR <<< "$BLOCKED_COUNTRIES"
 for c in "${COUNTRY_ARR[@]}"; do
     [ -z "$c" ] && continue  # 跳过空元素
     echo "    $c no;" >> "$TEMP_CONF"
