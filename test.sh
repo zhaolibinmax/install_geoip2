@@ -624,14 +624,7 @@ log_info "✅ GeoIP2模块下载完成"
 # 3.6 编译动态模块
 log_info "5. 编译GeoIP2动态模块..."
 cd "$NGINX_SRC_DIR"
-# 1. 提取原始configure参数
-RAW_CONFIG_ARGS=$(nginx -V 2>&1 | grep -oP '(?<=configure arguments: ).*')
-# 2. 过滤参数（兼容所有Linux，无grep报错）
-FILTERED_CONFIG_ARGS=$(echo "$RAW_CONFIG_ARGS" | grep -o -- '--[[:alnum:]_-]\+' | tr '\n' ' ')
-# 3. 转换为数组
-IFS=' ' read -ra NGINX_CONFIG_ARGS_ARR <<< "$FILTERED_CONFIG_ARGS"
-# 4. 执行configure
-./configure "${NGINX_CONFIG_ARGS_ARR[@]}" --with-compat --add-dynamic-module=/tmp/$MODULE_NAME || {
+./configure --with-compat --add-dynamic-module=/tmp/$MODULE_NAME || {
     log_error "编译配置失败"
     restore_nginx_config
     exit 1
