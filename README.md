@@ -17,13 +17,7 @@ GeoIP2 数据库自动下载，失败可手动从 MaxMind 获取
 服务器终端直接复制执行以下命令，全程按交互提示操作即可：
 
 ```bash
-bash -c "$(curl -L https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/geoip2.sh)"
-```
-
-测试
-
-```bash
-bash -c "$(curl -L https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/test.sh)"
+bash -c "$(curl -L https://raw.githubusercontent.com/zhaolibinmax/install_geoip2/refs/heads/main/install_geoip2.sh)"
 ```
 
 # 🧑‍💻 作者
